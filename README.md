@@ -4,6 +4,8 @@
 ## Cardiomyopathy Survival Analysis
 
 This project examines clinical, lifestyle, and body characteristics associated with survival among patients diagnosed with cardiomyopathy. The analysis uses Cox proportional hazards models to identify predictors of time-to-death and compare model performance. 
+- The report with all analyses can be found [here](./Report.pdf).
+- The appendix will all relevant R codes can be found [here](./Appendix.pdf).
 
 ## Project Objectives
 
@@ -15,6 +17,7 @@ This project examines clinical, lifestyle, and body characteristics associated w
 
 3. **Model Comparison**  
    Determine which model provides a better explanation of patient survival using likelihood ratio tests, AIC, and proportional hazards diagnostics.
+   
 
 ## Dataset
 
@@ -34,15 +37,16 @@ This project examines clinical, lifestyle, and body characteristics associated w
 
 ## Key Findings (Summary)
 
-- Several predictors show significant univariate associations with survival (e.g., age, ejection fraction, creatinine, sodium).
-- Some predictors remain significant in the multivariable model, indicating independent effects.
-- The reduced model performs as well as or better than the full model, suggesting that not all variables contribute meaningful predictive value.
+- Age, ejection percentage, and creatinine are significant independent predictors of survival in cardiomyopathy patients after adjusting for all other variables.
 
-## Tools Used
+- Anaemia, CPK, and hypertension, not significant in univariate analyses, became significant in the full model, highlighting interactions with other predictors.
 
-- **R** (survival, survminer, tidyverse)
-- R Markdown / Quarto for reporting
-- GitHub for version control
+- Older age increases the instantaneous risk of death by ~4.5% per year, holding other variables constant.
+
+- Higher ejection percentage reduces the instantaneous risk of death by ~4.4% per 1% increase, while higher creatinine increases risk by ~39% per unit.
+
+- Sodium was retained for clinical relevance, and overall findings emphasize that age, cardiac function, and kidney function are primary factors influencing survival risk.
+
 
 ## Repository Structure
 

@@ -4,8 +4,8 @@
 ## Cardiomyopathy Survival Analysis
 
 This project examines clinical, lifestyle, and body characteristics associated with survival among patients diagnosed with cardiomyopathy. The analysis uses Cox proportional hazards models to identify predictors of time-to-death and compare model performance. 
-- The report with all analyses can be found [here](./Report.pdf).
-- The appendix will all relevant R codes can be found [here](./Appendix.pdf).
+- The report with all analyses can be found [here](./Cardiomyopathy-Survival-Analysis-Report.pdf).
+- The appendix will all relevant R codes can be found [here](./Cardiomyopathy-Survival-Analysis-Appendix.pdf).
 
 ## Project Objectives
 

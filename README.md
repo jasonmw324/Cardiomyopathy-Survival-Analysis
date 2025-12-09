@@ -3,14 +3,14 @@
 
 ## Cardiomyopathy Survival Analysis
 
-This project examines clinical, lifestyle, and body characteristics associated with survival among patients diagnosed with cardiomyopathy. The analysis uses Cox proportional hazards models to identify predictors of time-to-death and compare model performance.
+This project examines clinical, lifestyle, and body characteristics associated with survival among patients diagnosed with cardiomyopathy. The analysis uses Cox proportional hazards models to identify predictors of time-to-death and compare model performance. 
 
 ## Project Objectives
 
 1. **Univariate Analysis**  
    Evaluate each predictor individually to determine which variables show a significant association with patient survival.
 
-2. **Multivariable Modeling**  
+2. **Survival Analysis**  
    Assess whether predictors identified as significant in univariate analyses remain associated with survival when included together in a multivariable Cox model. Compare this reduced model to a full model containing all predictors.
 
 3. **Model Comparison**  
@@ -25,10 +25,8 @@ This project examines clinical, lifestyle, and body characteristics associated w
 
 ## Methods
 
-- Cox proportional hazards models (`coxph` in R)
-- Univariate screening of all predictors
-- Multivariable model building (reduced vs. full)
-- Schoenfeld residuals for proportional hazards diagnostics
+- Cox proportional hazards models 
+- Logistic Regression
 - Model comparison via:
   - Likelihood ratio tests  
   - Akaike Information Criterion (AIC)  

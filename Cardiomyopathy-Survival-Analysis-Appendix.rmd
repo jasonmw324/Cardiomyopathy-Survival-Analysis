@@ -1,0 +1,499 @@
+---
+title: 'Appendix: Cardiomyopathy Survival Analysis'
+author: "Jason Withrow"
+date: "2025-12-09"
+output: pdf_document
+---
+# Introduction
+This appendix contains all R code for data processing, exploratory data analysis,
+Cox proportional hazards modeling, and diagnostics for the cardiomyopathy survival project.
+
+# Data Preprocessing
+
+```{r}
+# Load necessary Libraries
+library(skimr)
+library(tidyverse)
+library(gridExtra)
+library(car)
+library(caret)
+library(pROC)
+library(patchwork)
+library(survival)
+library(survminer)
+library(scales)
+
+# Read in dataset
+cardio_data <- read.csv("DATA/cardiomyopathy.csv")
+
+# Check NAs
+sum(is.na(cardio_data))
+# Check Data structure
+str(cardio_data)
+```
+# Exploratory Data Analysis
+
+## Univariate Analysis
+
+```{r}
+# Define continuous variables
+cont_vars <- c("age", "cpk", "ejection_percentage", "platelets", "creatinine", "sodium", "follow_up")
+
+# Define categorical variables
+cate_vars <- c("anaemia", "diabetes", "hypertension", "gender", "smoking", "death")
+
+# Provide an overview of the dataset with skimr (gives summary stats, missingness, and distributions)
+skim(cardio_data)
+
+# Get basic summary statistics for continuous variables only (mean, median, min, max, etc.)
+summary(cardio_data[, cont_vars])
+
+```
+### Histograms
+
+```{r}
+# Histograms of each continious variable 
+
+ggplot(cardio_data , aes(x = age)) +
+  geom_histogram(bins = 15, fill = 'skyblue' , color = 'black') + 
+  labs(
+    title = 'Histogram of Age',
+    x = 'Age(year)',
+    y = 'Count'
+  )
+
+ggplot(cardio_data , aes(x = cpk)) +
+  geom_histogram(bins = 15, fill = "skyblue", color = 'black')+
+  labs(
+    title = 'Histogram of cpk',
+    x = "cpk",
+    y = 'Count'
+  )
+
+ggplot(cardio_data , aes(x = ejection_percentage)) +
+  geom_histogram(bins = 15, fill = "skyblue" , color = 'black') + 
+  labs(
+    title = 'Histogram of Ejection Percentage',
+    x = "Ejection Percentage",
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = platelets)) +
+  geom_histogram(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Platelets',
+    x = 'Platelets',
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = creatinine)) +
+  geom_histogram(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Creatinine',
+    x = 'Creatinine',
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = sodium)) +
+  geom_histogram(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Sodium',
+    x = 'Sodium',
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = follow_up)) +
+  geom_histogram(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Platelets',
+    x = 'Follow up',
+    y = 'Count'
+  )
+```
+
+### Density Plots
+
+```{r}
+# Density Plots of each continious variable 
+
+ggplot(cardio_data , aes(x = age)) +
+  geom_density(bins = 15, fill = 'skyblue' , color = 'black') + 
+  labs(
+    title = 'Histogram of Age',
+    x = 'Age(year)',
+    y = 'Count'
+  )
+
+ggplot(cardio_data , aes(x = cpk)) +
+  geom_density(bins = 15, fill = 'skyblue' , color = 'black') + 
+  labs(
+    title = 'Histogram of cpk',
+    x = 'cpk',
+    y = 'Count'
+  )
+
+ggplot(cardio_data , aes(x = ejection_percentage)) +
+  geom_density(bins = 15, fill = "skyblue" , color = 'black') + 
+  labs(
+    title = 'Histogram of Ejection Percentage',
+    x = "Ejection Percentage",
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = platelets)) +
+  geom_density(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Platelets',
+    x = 'Platelets',
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = creatinine)) +
+  geom_density(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Creatinine',
+    x = 'Creatinine',
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = sodium)) +
+  geom_density(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Sodium',
+    x = 'Sodium',
+    y = 'Count'
+  )
+
+ggplot(cardio_data, aes(x = follow_up)) +
+  geom_density(bins = 15, fill = "skyblue", color = 'black') +
+  labs(
+    title = 'Histogram of Platelets',
+    x = 'Follow up',
+    y = 'Count'
+  )
+```
+
+### Bar plots
+
+```{r}
+# Bar plots of each continious variable
+
+ggplot(cardio_data, aes(x = anaemia)) + 
+  geom_bar(fill = c("skyblue" , "red") , color = "black") +                 
+  labs(
+    title = "Counts of Patients with Anaemia",
+    x = "Anaemia Status (0 = No, 1 = Yes)",
+    y = "Count"
+  ) +
+  theme_minimal() 
+
+ggplot(cardio_data, aes(x = diabetes)) +  
+  geom_bar(fill = c("skyblue" , "red") , color = "black") +
+  labs(
+    title = "Counts of Patients with Diabetes",
+    x = "Diabetes Status (0 = No, 1 = Yes)",
+    y = "Count"
+  ) +
+  theme_minimal() 
+
+ggplot(cardio_data, aes(x = hypertension)) +  
+  geom_bar(fill = c("skyblue" , "red") , color = "black") +
+  labs(
+    title = "Counts of Patients with Hypertension",
+    x = "Hypertension Status (0 = No, 1 = Yes)",
+    y = "Count"
+  ) +
+  theme_minimal() 
+
+ggplot(cardio_data, aes(x = gender)) + 
+  geom_bar(fill = c("skyblue" , "red") , color = "black") +          
+  labs(
+    title = "Gender Breakdown",
+    x = "Gender (0 = Female, 1 = Male)",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+ggplot(cardio_data, aes(x = smoking)) +  
+  geom_bar(fill = c("skyblue" , "red") , color = "black") +             
+  labs(
+    title = "Counts of Patients Who Smoke",
+    x = "Smoking Status (0 = No, 1 = Yes)",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+ggplot(cardio_data, aes(x = death)) +  
+  geom_bar(fill = c("skyblue" , "red") , color = "black") +             
+  labs(
+    title = "Counts of Patients who are dead",
+    x = "Paitent Status (0 = Dead, 1 = Alive)",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+
+
+
+### Correlation Matrix
+
+```{r}
+# Nicely formatted Correlation Matrix
+
+cors <- function(df) {
+  M <- Hmisc::rcorr(as.matrix(df))
+  list(r = data.frame(M$r), P = data.frame(M$P))
+}
+
+
+formatted_cors <- function(df){
+  cors(df) %>%
+    map(~rownames_to_column(.x, var = "measure1")) %>%
+    map(~pivot_longer(.x, -measure1, names_to = "measure2", values_to = "value")) %>%
+    bind_rows(.id = "id") %>%
+    pivot_wider(names_from = id, values_from = value) %>%
+    rename(p = P, r = r) %>%
+    mutate(sig_p = ifelse(p < 0.05, TRUE, FALSE))  
+}
+
+
+formatted_cors(cardio_data[, cont_vars]) %>%
+  ggplot(aes(measure1, measure2, fill = r, label = round(r, 2))) +
+  geom_tile() +
+  geom_text() +
+  labs(
+    x = NULL, y = NULL,
+    fill = "Pearson's\nCorrelation",
+    title = "Correlations in Cardiomyopathy Data",
+  ) +
+  scale_fill_gradient2(low = "#0C6291", mid = "#FBFEF9", high = "#A63446", limits = c(-1,1)) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_discrete(expand = c(0,0)) +
+  theme_classic() +
+  theme(
+    text = element_text(family = "sans"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+## Multivariate Analysis
+
+### Boxplots
+
+```{r}
+# Boxplots of continuous variables stratified by death status
+
+
+ggplot(cardio_data , aes(x = death , y = age))+
+  geom_boxplot(fill = c("skyblue" , "red")) +
+  labs(
+    title = "Age by Survival Status",
+    x = "Death (0 = Alive , 1 = Dead)",
+    y = "Age"
+  ) +
+theme_minimal()
+
+ggplot(cardio_data , aes(x = death , y = cpk))+
+  geom_boxplot(fill = c("skyblue" , "red")) +
+  labs(
+    title = "Cpk by Survival Status",
+    x = "Death (0 = Alive , 1 = Dead)",
+    y = "Cpk"
+  ) +
+theme_minimal()
+
+ggplot(cardio_data , aes(x = death , y = ejection_percentage))+
+  geom_boxplot(fill = c("skyblue" , "red")) +
+  labs(
+    title = "Ejection Percentage by Survival Status",
+    x = "Death (0 = Alive , 1 = Dead)",
+    y = "Ejection Percentage"
+  ) +
+theme_minimal()
+
+ggplot(cardio_data , aes(x = death , y = platelets))+
+  geom_boxplot(fill = c("skyblue" , "red")) +
+  labs(
+    title = "Platelets by Survival Status",
+    x = "Death (0 = Alive , 1 = Dead)",
+    y = "Platelets"
+  ) +
+theme_minimal()
+
+ggplot(cardio_data , aes(x = death , y = creatinine))+
+  geom_boxplot(fill = c("skyblue" , "red")) +
+  labs(
+    title = "Creatinine by Survival Status",
+    x = "Death (0 = Alive , 1 = Dead)",
+    y = "Creatinine"
+  ) +
+theme_minimal()
+
+ggplot(cardio_data , aes(x = death , y = sodium))+
+  geom_boxplot(fill = c("skyblue" , "red")) +
+  labs(
+    title = "Sodium by Survival Status",
+    x = "Death (0 = Alive , 1 = Dead)",
+    y = "Sodium"
+  ) +
+theme_minimal()
+
+ggplot(cardio_data , aes(x = death , y = follow_up))+
+  geom_boxplot(fill = c("skyblue" , "red")) +
+  labs(
+    title = "Sodium by Survival Status",
+    x = "Death (0 = Alive , 1 = Dead)",
+    y = "Follow Up(days)"
+  ) +
+theme_minimal()
+```
+### Kaplan Meier Curves
+
+```{r}
+# Kaplan Meier curves for each of the categorical variables
+
+km_fit <- survfit(surv_obj ~ anaemia, data = cardio_data)
+plot(km_fit,
+     xlab = "Follow-Up Time (days)",
+     ylab = "Survival Probability",
+     col = c("red", "blue"),
+     lty = 1:2,
+     main = "Kaplan-Meier Curve by anaemia")
+
+km_fit <- survfit(surv_obj ~ diabetes, data = cardio_data)
+plot(km_fit,
+     xlab = "Follow-Up Time (days)",
+     ylab = "Survival Probability",
+     col = c("red", "blue"),
+     lty = 1:2,
+     main = "Kaplan-Meier Curve by diabetes")
+
+km_fit <- survfit(surv_obj ~ hypertension, data = cardio_data)
+plot(km_fit,
+     xlab = "Follow-Up Time (days)",
+     ylab = "Survival Probability",
+     col = c("red", "blue"),
+     lty = 1:2,
+     main = "Kaplan-Meier Curve by hypertension")
+
+km_fit <- survfit(surv_obj ~ gender, data = cardio_data)
+plot(km_fit,
+     xlab = "Follow-Up Time (days)",
+     ylab = "Survival Probability",
+     col = c("red", "blue"),
+     lty = 1:2,
+     main = "Kaplan-Meier Curve by gender")
+
+km_fit <- survfit(surv_obj ~ smoking, data = cardio_data)
+plot(km_fit,
+     xlab = "Follow-Up Time (days)",
+     ylab = "Survival Probability",
+     col = c("red", "blue"),
+     lty = 1:2,
+     main = "Kaplan-Meier Curve by smoking")
+
+
+```
+
+## Results
+
+### Simple Logistic Regression
+
+```{r}
+# LRT tests for each of the predictors
+
+# age
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ age, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# cpk
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ cpk, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+
+# ejection
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ ejection_percentage, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# platelets
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ platelets, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# creatinine
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ creatinine, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# sodium
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ sodium, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+
+# anaemia
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ anaemia, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# diabetes
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ diabetes, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# hypertension
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ hypertension, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# gender
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ gender, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+
+# smoking
+null = glm(death ~ 1, data = cardio_data, family = binomial)
+full = glm(death ~ smoking, data = cardio_data, family = binomial)
+anova(null, full , test = "Chi")
+```
+### Cox proportional hazards models
+
+```{r}
+# Fit both full and reduced model
+surv_obj = Surv(time = cardio_data$follow_up, event = cardio_data$death)
+cox_model_1 = coxph(surv_obj ~ age + ejection_percentage + creatinine + sodium, data = cardio_data)
+cox_model_2 = coxph(surv_obj ~.  , data = cardio_data[,-c(12,13)])
+
+# Summaries of models
+summary(cox_model_1)
+summary(cox_model_2)
+
+AIC(cox_model_1)
+AIC(cox_model_2)
+
+# LRT test of nested models
+
+anova(cox_model_1, cox_model_2 , test = "Chi")
+```
+#### Assumption Checks
+
+```{r}
+# Tests the proportional hazards assumption for a Cox regression model
+test = cox.zph(cox_model_1)
+test
+
+# Schoenfield Residuals for each predictor in the reduced model
+ggcoxzph(test)[1]
+ggcoxzph(test)[2]
+ggcoxzph(test)[3]
+ggcoxzph(test)[4]
+```
+
+
+
+
